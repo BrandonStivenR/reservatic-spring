@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Comprobante - ReservaTIC</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+    <div class="navbar">ReservaTIC - Comprobante</div>
+    <div class="contenedor">
+        <div class="card resumen">
+            <h2>¡Reserva registrada!</h2>
+            <p><b>Código:</b> <span th:text="'RT-' + ${reserva.idReserva}"></span></p>
+            <p><b>Usuario:</b> <span th:text="${reserva.usuario.nombreCompleto}"></span></p>
+            <p><b>Ficha / Programa:</b> <span th:text="${reserva.fichaPrograma}"></span></p>
+            <p><b>Sala:</b> <span th:text="${reserva.sala.nombreSala}"></span></p>
+            <p><b>Fecha:</b> <span th:text="${reserva.fechaReserva}"></span></p>
+            <p><b>Horario:</b> <span th:text="${reserva.horaInicio} + ' a ' + ${reserva.horaFin}"></span></p>
+            <p><b>Estado:</b> <span th:text="${reserva.estado}"></span></p>
+            <a class="btn btn-azul" th:href="@{/reservas}">Volver al panel</a>
+        </div>
+    </div>
+</body>
+</html>

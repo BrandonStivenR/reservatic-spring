@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservas - ReservaTIC</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+    <div class="navbar">ReservaTIC - Panel de reservas</div>
+    <div class="contenedor">
+        <h1>Reservas de salas</h1>
+        <a class="btn" th:href="@{/reservas/nueva}">Nueva reserva</a>
+        <br><br>
+        <table>
+            <tr>
+                <th>ID</th><th>Sala</th><th>Usuario</th><th>Ficha</th>
+                <th>Fecha</th><th>Horario</th><th>Estado</th><th>Acciones</th>
+            </tr>
+            <!-- th:each recorre la lista que envía el controlador -->
+            <tr th:each="r : ${reservas}">
+                <td th:text="${r.idReserva}"></td>
+                <td th:text="${r.sala.nombreSala}"></td>
+                <td th:text="${r.usuario.nombreCompleto}"></td>
+                <td th:text="${r.fichaPrograma}"></td>
+                <td th:text="${r.fechaReserva}"></td>
+                <td th:text="${r.horaInicio} + ' a ' + ${r.horaFin}"></td>
+                <td th:text="${r.estado}"></td>
+                <td>
+                    <a th:href="@{/reservas/comprobante/{id}(id=${r.idReserva})}">Ver</a> |
+                    <a th:href="@{/reservas/editar/{id}(id=${r.idReserva})}">Editar</a>
+                    <form th:action="@{/reservas/eliminar/{id}(id=${r.idReserva})}" method="post"
+                          style="display:inline" onsubmit="return confirm('¿Eliminar esta reserva?');">
+                        <button class="btn btn-rojo" type="submit">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

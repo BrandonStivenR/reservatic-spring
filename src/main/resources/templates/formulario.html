@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario - ReservaTIC</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}">
+</head>
+<body>
+    <div class="navbar">ReservaTIC - Formulario de solicitud</div>
+    <div class="contenedor">
+        <div class="card">
+            <h2>Formulario de solicitud</h2>
+            <p class="error" th:if="${error}" th:text="${error}"></p>
+
+            <!-- th:object enlaza el formulario con el objeto Reserva del controlador -->
+            <form th:action="@{/reservas/guardar}" th:object="${reserva}" method="post">
+                <input type="hidden" th:field="*{idReserva}">
+
+                <label>Sala / Ambiente</label>
+                <select th:field="*{sala.idSala}" required>
+                    <option value="">Seleccione la sala</option>
+                    <option th:each="s : ${salas}" th:value="${s.idSala}" th:text="${s.nombreSala}"></option>
+                </select>
+
+                <label>Usuario (instructor)</label>
+                <select th:field="*{usuario.idUsuario}" required>
+                    <option value="">Seleccione el usuario</option>
+                    <option th:each="u : ${usuarios}" th:value="${u.idUsuario}" th:text="${u.nombreCompleto}"></option>
+                </select>
+
+                <label>Ficha o programa de formación</label>
+                <input type="text" th:field="*{fichaPrograma}" placeholder="Ej: 3336092 - ADSO" required>
+
+                <label>Fecha de la reserva</label>
+                <input type="date" th:field="*{fechaReserva}" required>
+
+                <label>Hora de inicio</label>
+                <input type="time" th:field="*{horaInicio}" required>
+
+                <label>Hora de finalización</label>
+                <input type="time" th:field="*{horaFin}" required>
+
+                <label>Estado</label>
+                <select th:field="*{estado}">
+                    <option value="Confirmada">Confirmada</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+
+                <button class="btn" type="submit">Confirmar reserva</button>
+                <a class="btn btn-azul" th:href="@{/reservas}">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
