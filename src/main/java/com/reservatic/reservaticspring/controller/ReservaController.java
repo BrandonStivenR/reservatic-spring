@@ -10,10 +10,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import java.time.LocalDate;
+import java.util.regex.Pattern;
 
 /** Controlador MVC del módulo de reservas: listar, crear, editar, eliminar y comprobante. */
 @Controller
 public class ReservaController {
+
+    // Ficha: solo letras, números, espacios, punto y guion (rechaza símbolos como @ # $ % ' ;)
+    private static final Pattern PATRON_FICHA =
+            Pattern.compile("^[A-Za-z0-9ÁÉÍÓÚÜáéíóúüÑñ .\\-]+$");
 
     private final ReservaRepository reservaRepository;
     private final SalaRepository salaRepository;
@@ -68,15 +74,7 @@ public class ReservaController {
         reserva.setUsuario(usuarioRepository.findById(reserva.getUsuario().getIdUsuario()).orElse(null));
         reserva.setSala(salaRepository.findById(reserva.getSala().getIdSala()).orElse(null));
 
-        String error = null;
-        if (reserva.getHoraInicio() == null || reserva.getHoraFin() == null
-                || !reserva.getHoraFin().isAfter(reserva.getHoraInicio())) {
-            error = "La hora de finalización debe ser posterior a la de inicio.";
-        } else if (reservaRepository.existeCruce(reserva.getSala().getIdSala(), reserva.getFechaReserva(),
-                reserva.getHoraInicio(), reserva.getHoraFin(),
-                reserva.getIdReserva() == null ? 0 : reserva.getIdReserva())) {
-            error = "La sala ya está reservada en ese horario. Elige otra franja u otra sala.";
-        }
+        String error = validar(reserva);
 
         if (error != null) {
             model.addAttribute("error", error);
@@ -84,8 +82,48 @@ public class ReservaController {
             return "formulario";
         }
 
+        reserva.setFichaPrograma(reserva.getFichaPrograma().trim());
         Reserva guardada = reservaRepository.save(reserva);
         return "redirect:/reservas/comprobante/" + guardada.getIdReserva();
+    }
+
+    /** Aplica las reglas de validación. Devuelve el mensaje de error o null si todo está bien. */
+    private String validar(Reserva reserva) {
+        // Sala y usuario deben existir en la base de datos
+        if (reserva.getSala() == null || reserva.getUsuario() == null) {
+            return "Seleccione una sala y un usuario válidos.";
+        }
+        // Ficha: obligatoria, máximo 50 caracteres (límite de la columna) y sin símbolos raros
+        String ficha = reserva.getFichaPrograma() == null ? "" : reserva.getFichaPrograma().trim();
+        if (ficha.isEmpty()) {
+            return "La ficha o programa de formación es obligatoria.";
+        }
+        if (ficha.length() > 50) {
+            return "La ficha no puede superar los 50 caracteres.";
+        }
+        if (!PATRON_FICHA.matcher(ficha).matches()) {
+            return "La ficha solo admite letras, números, espacios, punto y guion.";
+        }
+        // Fecha: obligatoria y, en reservas nuevas, no puede estar en el pasado
+        if (reserva.getFechaReserva() == null) {
+            return "La fecha de la reserva es obligatoria.";
+        }
+        if (reserva.getIdReserva() == null && reserva.getFechaReserva().isBefore(LocalDate.now())) {
+            return "No se puede reservar en una fecha pasada.";
+        }
+        // Horas: obligatorias y la final debe ser posterior a la inicial
+        if (reserva.getHoraInicio() == null || reserva.getHoraFin() == null
+                || !reserva.getHoraFin().isAfter(reserva.getHoraInicio())) {
+            return "La hora de finalización debe ser posterior a la de inicio.";
+        }
+        // Cruce de horarios (una reserva cancelada no ocupa la sala)
+        if (!"Cancelada".equals(reserva.getEstado())
+                && reservaRepository.existeCruce(reserva.getSala().getIdSala(), reserva.getFechaReserva(),
+                        reserva.getHoraInicio(), reserva.getHoraFin(),
+                        reserva.getIdReserva() == null ? 0 : reserva.getIdReserva())) {
+            return "La sala ya está reservada en ese horario. Elige otra franja u otra sala.";
+        }
+        return null;
     }
 
     // DELETE: elimina la reserva
